@@ -10,7 +10,7 @@ public class LmmBeanDefinition {
 
     private String beanClassName;   // 全限类名
     private String factoryBeanName; // simple 名
-    private boolean lazyInit = false;
+    private boolean lazyInit = false;   // 假设所有 Not Lazy 的 Bean 都不会发生循环引用，即可优先处理非 Lazy 的 Bean
 
     public String getBeanClassName() {
         return beanClassName;

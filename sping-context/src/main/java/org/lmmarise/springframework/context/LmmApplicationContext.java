@@ -2,10 +2,16 @@ package org.lmmarise.springframework.context;
 
 import org.lmmarise.springframework.beans.LmmBeanWrapper;
 import org.lmmarise.springframework.beans.factory.LmmBeanFactory;
+import org.lmmarise.springframework.beans.factory.LmmBeanPostProcessor;
+import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
+import org.lmmarise.springframework.beans.factory.annotation.LmmController;
+import org.lmmarise.springframework.beans.factory.annotation.LmmService;
 import org.lmmarise.springframework.beans.factory.config.LmmBeanDefinition;
 import org.lmmarise.springframework.beans.factory.support.LmmBeanDefinitionReader;
 import org.lmmarise.springframework.context.support.LmmDefaultListableBeanFactory;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -65,7 +71,7 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
             String beanName = beanDefinitionEntry.getKey();
             if (!beanDefinitionEntry.getValue().isLazyInit()) {
                 try {
-                    getBean(beanName);
+                    getBean(beanName);  // 优先初始化并装载非 Lazy 的 Bean，避免循环引用
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -90,8 +96,74 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
      */
     @Override
     public Object getBean(String beanName) {
-        // TODO: 2021/8/22 9:20 下午 by@lmmarise.j
-        return null;
+        LmmBeanDefinition beanDefinition = super.beanDefinitionMap.get(beanName);
+        try {
+            // 通知事件
+            LmmBeanPostProcessor beanPostProcessor = new LmmBeanPostProcessor() {};
+            Object instance = instantiateBean(beanDefinition);
+            if (instance == null) {
+                return null;
+            }
+            // bean 实例化之前的回调
+            beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            LmmBeanWrapper beanWrapper = new LmmBeanWrapper(instance);
+            this.factoryBeanInstanceCache.put(beanName, beanWrapper);
+            // 实例初始化之后调用
+            beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            populationBean(beanName, instance);
+            return this.factoryBeanInstanceCache.get(beanName).getWrappedInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 实例化 Bean，并放入容器
+     */
+    private Object instantiateBean(LmmBeanDefinition beanDefinition) {
+        Object instance = null;
+        String className = beanDefinition.getBeanClassName();
+        try {
+            // 是否有实例
+            if (this.factoryBeanObjectCache.containsKey(className)) {
+                instance = this.factoryBeanObjectCache.get(className);  // 对于单例保持唯一性
+            } else {
+                Class<?> clazz = Class.forName(className);
+                instance = clazz.newInstance();
+                this.factoryBeanObjectCache.put(beanDefinition.getFactoryBeanName(), instance);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return instance;
+    }
+
+    /**
+     * 对实例的 LmmAutowired 字段进行注入
+     */
+    private void populationBean(String beanName, Object instance) {
+        Class<?> clazz = instance.getClass();
+        if (!(clazz.isAnnotationPresent(LmmController.class) || clazz.isAnnotationPresent(LmmService.class))) {
+            return;
+        }
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (!field.isAnnotationPresent(LmmAutowired.class)) {
+                continue;
+            }
+            LmmAutowired autowired = field.getAnnotation(LmmAutowired.class);
+            String autowiredBeanName = autowired.value().trim();
+            if ("".equals(autowiredBeanName)) {
+                autowiredBeanName = field.getType().getName();  // 不指定 BeanName 则根据类型注入
+            }
+            field.setAccessible(true);
+            try {
+                field.set(instance, this.factoryBeanInstanceCache.get(autowiredBeanName).getWrappedInstance());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

@@ -1,7 +1,7 @@
 package org.lmmarise.springframework.beans.factory.support;
 
-import com.sun.istack.internal.Nullable;
 import org.lmmarise.springframework.beans.factory.config.LmmBeanDefinition;
+import org.lmmarise.springframework.util.ClassUtils;
 import org.lmmarise.springframework.util.StringUtils;
 
 import java.io.File;
@@ -25,10 +25,11 @@ public class LmmBeanDefinitionReader {
     private final Properties config = new Properties();
     // 规范，固定配置文件中的key为'scanPackage'
     private final String SCAN_PACKAGE = "scanPackage";
+    private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
     public LmmBeanDefinitionReader(String... locations) {
         try(InputStream is = this.getClass().getClassLoader().getResourceAsStream(locations[0].replace("classpath:", ""))) {
-            config.load(is);
+            this.config.load(is);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -54,25 +55,28 @@ public class LmmBeanDefinitionReader {
                     continue;
                 }
                 String className = (scanPackage + "." + file.getName().replace(".class", "").replaceAll("/", "."));
-                registryBeanClasses.add(className);
+                this.registryBeanClasses.add(className);
             }
         }
     }
 
     public Properties getConfig() {
-        return config;
+        return this.config;
     }
 
-    @Nullable
+    public void setBeanClassLoader(ClassLoader beanClassLoader) {
+        this.beanClassLoader = (beanClassLoader != null ? beanClassLoader : ClassUtils.getDefaultClassLoader());
+    }
+
     public ClassLoader getBeanClassLoader() {
-        return null;
+        return this.beanClassLoader;
     }
 
 
     public List<LmmBeanDefinition> loadBeanDefinitions() {
         ArrayList<LmmBeanDefinition> result = new ArrayList<>();
         try {
-            for (String className : registryBeanClasses) {
+            for (String className : this.registryBeanClasses) {
                 Class<?> beanClass = Class.forName(className);
                 if (beanClass.isInterface()) {
                     continue;

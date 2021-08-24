@@ -8,7 +8,7 @@
 
     <servlet>
         <servlet-name>lmmarise-springmvc</servlet-name>
-        <servlet-class>org.lmmarise.springframework.webmvc.LmmDispatcherServlet</servlet-class>
+        <servlet-class>org.lmmarise.springframework.web.servlet.LmmDispatcherServlet</servlet-class>
         <init-param>
             <param-name>contextConfigLocation</param-name>
             <param-value>classpath:application.properties</param-value>

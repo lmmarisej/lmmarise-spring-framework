@@ -8,8 +8,8 @@
 ![img_2.png](img_2.png)
 
 ## 测试
-http://localhost:8080/web/queryAll.json
+http://localhost:8080/web/queryAll.json <br/>
 ![img.png](img.png)
 
-http://localhost:8080/web/first.html?name=cxk
+http://localhost:8080/web/first.html?name=cxk   <br/>
 ![img_1.png](img_1.png)

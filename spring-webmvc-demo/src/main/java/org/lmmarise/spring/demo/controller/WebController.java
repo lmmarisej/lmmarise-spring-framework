@@ -1,7 +1,6 @@
 package org.lmmarise.spring.demo.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.lmmarise.spring.demo.service.IQueryService;
 import org.lmmarise.springframework.beans.factory.annotation.*;
 import org.lmmarise.springframework.web.servlet.LmmModelAndView;
@@ -20,7 +19,7 @@ public class WebController {
     private IQueryService queryService;
 
     @LmmRequestMapping("/first.html")
-    public LmmModelAndView query(@LmmRequestParam("name") String name) {
+    public LmmModelAndView query(@LmmRequestParam("name") String name) throws Exception {
         String result = queryService.query(name);
         HashMap<String, Object> model = new HashMap<>();
         model.put("name", name);
@@ -31,7 +30,7 @@ public class WebController {
 
     @LmmResponseBody
     @LmmRequestMapping("/queryAll.json")
-    public Object queryAll() throws JsonProcessingException {
+    public Object queryAll() throws Exception {
         return queryService.queryAll();
     }
 

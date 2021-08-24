@@ -19,7 +19,10 @@ public class IQueryServiceImpl implements IQueryService {
     private static final Logger log = LoggerFactory.getLogger(IQueryServiceImpl.class);
 
     @Override
-    public String query(String name) {
+    public String query(String name) throws Exception {
+        if (1 == 1) {
+            throw new Exception("测试异常通知！");
+        }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String time = sdf.format(new Date());
         String json = "{\"name\":\"" + name + "\", \"time\":\"" + time + "\"}";
@@ -28,7 +31,7 @@ public class IQueryServiceImpl implements IQueryService {
     }
 
     @Override
-    public List<String> queryAll() {
+    public List<String> queryAll() throws Exception {
         ArrayList<String> list = new ArrayList<>();
         list.add(query("1"));
         list.add(query("2"));

@@ -3,14 +3,16 @@ package org.lmmarise.springframework.context;
 import org.lmmarise.springframework.beans.LmmBeanWrapper;
 import org.lmmarise.springframework.beans.factory.LmmBeanFactory;
 import org.lmmarise.springframework.beans.factory.LmmBeanPostProcessor;
+import org.lmmarise.springframework.beans.factory.LmmBeansException;
 import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
 import org.lmmarise.springframework.beans.factory.annotation.LmmController;
 import org.lmmarise.springframework.beans.factory.annotation.LmmService;
 import org.lmmarise.springframework.beans.factory.config.LmmBeanDefinition;
 import org.lmmarise.springframework.beans.factory.support.LmmBeanDefinitionReader;
 import org.lmmarise.springframework.context.support.LmmDefaultListableBeanFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 2021/8/22 4:44 下午
  */
 public class LmmApplicationContext extends LmmDefaultListableBeanFactory implements LmmBeanFactory {
+
+    private static final Logger log = LoggerFactory.getLogger(LmmApplicationContext.class);
 
     private final String[] configLocations;
     private LmmBeanDefinitionReader reader;
@@ -44,7 +48,7 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
     @Override
     public void refresh() throws Exception {
         // 定位配置文件
-        reader = new LmmBeanDefinitionReader(this.configLocations);
+        this.reader = new LmmBeanDefinitionReader(this.configLocations);
         // 加载配置文件
         List<LmmBeanDefinition> beanDefinitions = reader.loadBeanDefinitions();
         // 注册，将配置信息收集到容器
@@ -70,25 +74,21 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
         for (Map.Entry<String, LmmBeanDefinition> beanDefinitionEntry : super.beanDefinitionMap.entrySet()) {
             String beanName = beanDefinitionEntry.getKey();
             if (!beanDefinitionEntry.getValue().isLazyInit()) {
-                try {
-                    getBean(beanName);  // 优先初始化并装载非 Lazy 的 Bean，避免循环引用
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                getBean(beanName);  // 优先初始化并装载非 Lazy 的 Bean，避免循环引用
             }
         }
     }
 
     public String[] getBeanDefinitionNames() {
-        return beanDefinitionMap.keySet().toArray(new String[0]);
+        return this.beanDefinitionMap.keySet().toArray(new String[0]);
     }
 
     public int getBeanDefinitionCount() {
-        return beanDefinitionMap.size();
+        return this.beanDefinitionMap.size();
     }
 
     public Properties getConfig() {
-        return reader.getConfig();
+        return this.reader.getConfig();
     }
 
     /**
@@ -97,14 +97,15 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
     @Override
     public Object getBean(String beanName) {
         LmmBeanDefinition beanDefinition = super.beanDefinitionMap.get(beanName);
+        // 通知事件
+        LmmBeanPostProcessor beanPostProcessor = new LmmBeanPostProcessor() {
+        };
+        Object instance = instantiateBean(beanDefinition);
+        if (instance == null) {
+            return null;
+        }
+        // bean 实例化之前的回调
         try {
-            // 通知事件
-            LmmBeanPostProcessor beanPostProcessor = new LmmBeanPostProcessor() {};
-            Object instance = instantiateBean(beanDefinition);
-            if (instance == null) {
-                return null;
-            }
-            // bean 实例化之前的回调
             beanPostProcessor.postProcessAfterInitialization(instance, beanName);
             LmmBeanWrapper beanWrapper = new LmmBeanWrapper(instance);
             this.factoryBeanInstanceCache.put(beanName, beanWrapper);
@@ -114,8 +115,8 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
             return this.factoryBeanInstanceCache.get(beanName).getWrappedInstance();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
+        return null;
     }
 
     /**
@@ -132,6 +133,9 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
                 Class<?> clazz = Class.forName(className);
                 instance = clazz.newInstance();
                 this.factoryBeanObjectCache.put(beanDefinition.getFactoryBeanName(), instance);
+                for (Class<?> interfaceClazz : instance.getClass().getInterfaces()) {
+                    this.factoryBeanObjectCache.put(interfaceClazz.getName(), instance);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -158,9 +162,13 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
                 autowiredBeanName = field.getType().getName();  // 不指定 BeanName 则根据类型注入
             }
             field.setAccessible(true);
+            Object bean = this.factoryBeanObjectCache.get(autowiredBeanName);
+            if (bean == null) {
+                throw new RuntimeException("Could not autowired bean, beanName[" + autowiredBeanName + "] does not found in ApplicationContext.");
+            }
             try {
-                field.set(instance, this.factoryBeanInstanceCache.get(autowiredBeanName).getWrappedInstance());
-            } catch (Exception e) {
+                field.set(instance, bean);
+            } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }

@@ -14,6 +14,7 @@
         <module>spring-beans</module>
         <module>spring-core</module>
         <module>spring-context</module>
+        <module>spring-aop</module>
     </modules>
 
 

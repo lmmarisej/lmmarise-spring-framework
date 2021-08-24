@@ -67,7 +67,7 @@ public class LmmDispatcherServlet extends HttpServlet {
         // 页面与模板关联
         String templateRoot = context.getConfig().getProperty("templateRoot");
         URL resource = this.getClass().getClassLoader().getResource(templateRoot);
-        if (resource ==null) {
+        if (resource == null) {
             throw new RuntimeException("templateRoot[" + templateRoot + "] in classpath not found.");
         }
         String templateRootPath = resource.getFile();
@@ -149,6 +149,7 @@ public class LmmDispatcherServlet extends HttpServlet {
         try {
             doDispatch(req, resp);
         } catch (Exception e) {
+            resp.setCharacterEncoding("utf-8");
             resp.getWriter().write(
                     "<font size='25' color='blue'>500 Exception</font><br/>Details:<br/>" +
                             Arrays.toString(e.getStackTrace())

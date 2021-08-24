@@ -13,8 +13,8 @@ public interface IQueryService {
     /**
      * 查询
      */
-    String query(String name);
+    String query(String name) throws Exception;
 
-    List<String> queryAll();
+    List<String> queryAll() throws Exception;
 
 }

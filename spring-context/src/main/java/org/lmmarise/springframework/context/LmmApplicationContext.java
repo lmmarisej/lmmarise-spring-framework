@@ -1,9 +1,13 @@
 package org.lmmarise.springframework.context;
 
+import org.lmmarise.framework.config.LmmAopConfig;
+import org.lmmarise.framework.framework.LmmAdvisedSupport;
+import org.lmmarise.framework.framework.LmmAopProxy;
+import org.lmmarise.framework.framework.LmmCgLibProxy;
+import org.lmmarise.framework.framework.LmmJdkDynamicAopProxy;
 import org.lmmarise.springframework.beans.LmmBeanWrapper;
 import org.lmmarise.springframework.beans.factory.LmmBeanFactory;
 import org.lmmarise.springframework.beans.factory.LmmBeanPostProcessor;
-import org.lmmarise.springframework.beans.factory.LmmBeansException;
 import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
 import org.lmmarise.springframework.beans.factory.annotation.LmmController;
 import org.lmmarise.springframework.beans.factory.annotation.LmmService;
@@ -132,7 +136,19 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
             } else {
                 Class<?> clazz = Class.forName(className);
                 instance = clazz.newInstance();
+
+                // 处理 AOP
+                LmmAdvisedSupport config = instantiationAopConfig(beanDefinition);
+                config.setTargetClass(clazz);
+                config.setTarget(instance);
+                // 根据 Aspect 配置文件判断当前 Bean 是否需要被代理
+                if (config.pointCutMatch()) {
+                    instance = createProxy(config).getProxy();
+                }
+
+                // 注册实现类
                 this.factoryBeanObjectCache.put(beanDefinition.getFactoryBeanName(), instance);
+                // 注册实现类接口
                 for (Class<?> interfaceClazz : instance.getClass().getInterfaces()) {
                     this.factoryBeanObjectCache.put(interfaceClazz.getName(), instance);
                 }
@@ -141,6 +157,25 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
             e.printStackTrace();
         }
         return instance;
+    }
+
+    private LmmAopProxy createProxy(LmmAdvisedSupport config) {
+        Class targetClass = config.getTargetClass();
+        if (targetClass.getInterfaces().length > 0) {
+            return new LmmJdkDynamicAopProxy(config);
+        }
+        return new LmmCgLibProxy(config);
+    }
+
+    private LmmAdvisedSupport instantiationAopConfig(LmmBeanDefinition beanDefinition) throws Exception {
+        LmmAopConfig config = new LmmAopConfig();
+        config.setPointCut(reader.getConfig().getProperty("pointCut"));
+        config.setAspectClass(reader.getConfig().getProperty("aspectClass"));
+        config.setAspectBefore(reader.getConfig().getProperty("aspectBefore"));
+        config.setAspectAfter(reader.getConfig().getProperty("aspectAfter"));
+        config.setAspectAfterThrow(reader.getConfig().getProperty("aspectAfterThrow"));
+        config.setAspectAfterThrowingName(reader.getConfig().getProperty("aspectAfterThrowingName"));
+        return new LmmAdvisedSupport(config);
     }
 
     /**

@@ -8,6 +8,7 @@ import org.lmmarise.framework.framework.LmmJdkDynamicAopProxy;
 import org.lmmarise.springframework.beans.LmmBeanWrapper;
 import org.lmmarise.springframework.beans.factory.LmmBeanFactory;
 import org.lmmarise.springframework.beans.factory.LmmBeanPostProcessor;
+import org.lmmarise.springframework.beans.factory.LmmInitializingBean;
 import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
 import org.lmmarise.springframework.beans.factory.annotation.LmmController;
 import org.lmmarise.springframework.beans.factory.annotation.LmmService;
@@ -110,7 +111,10 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
         }
         // bean 实例化之前的回调
         try {
-            beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+            if (instance instanceof LmmInitializingBean) {
+                ((LmmInitializingBean) instance).afterPropertiesSet();
+            }
             LmmBeanWrapper beanWrapper = new LmmBeanWrapper(instance);
             this.factoryBeanInstanceCache.put(beanName, beanWrapper);
             // 实例初始化之后调用

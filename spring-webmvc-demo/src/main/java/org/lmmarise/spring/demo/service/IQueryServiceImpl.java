@@ -1,6 +1,6 @@
 package org.lmmarise.spring.demo.service;
 
-import org.lmmarise.springframework.beans.factory.annotation.LmmService;
+import org.lmmarise.springframework.context.stereotype.LmmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

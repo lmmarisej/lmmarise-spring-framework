@@ -2,6 +2,10 @@ package org.lmmarise.spring.demo.controller;
 
 import org.lmmarise.spring.demo.service.IQueryService;
 import org.lmmarise.springframework.beans.factory.annotation.*;
+import org.lmmarise.springframework.context.stereotype.LmmController;
+import org.lmmarise.springframework.web.bind.annotation.LmmRequestMapping;
+import org.lmmarise.springframework.web.bind.annotation.LmmRequestParam;
+import org.lmmarise.springframework.web.bind.annotation.LmmResponseBody;
 import org.lmmarise.springframework.web.servlet.LmmModelAndView;
 
 import java.util.HashMap;

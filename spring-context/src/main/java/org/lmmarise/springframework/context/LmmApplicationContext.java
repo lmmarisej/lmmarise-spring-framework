@@ -10,10 +10,11 @@ import org.lmmarise.springframework.beans.factory.LmmBeanFactory;
 import org.lmmarise.springframework.beans.factory.LmmBeanPostProcessor;
 import org.lmmarise.springframework.beans.factory.LmmInitializingBean;
 import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
-import org.lmmarise.springframework.beans.factory.annotation.LmmController;
-import org.lmmarise.springframework.beans.factory.annotation.LmmService;
 import org.lmmarise.springframework.beans.factory.config.LmmBeanDefinition;
 import org.lmmarise.springframework.beans.factory.support.LmmBeanDefinitionReader;
+import org.lmmarise.springframework.context.stereotype.LmmComponent;
+import org.lmmarise.springframework.context.stereotype.LmmController;
+import org.lmmarise.springframework.context.stereotype.LmmService;
 import org.lmmarise.springframework.context.support.LmmDefaultListableBeanFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -187,7 +188,7 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
      */
     private void populationBean(String beanName, Object instance) {
         Class<?> clazz = instance.getClass();
-        if (!(clazz.isAnnotationPresent(LmmController.class) || clazz.isAnnotationPresent(LmmService.class))) {
+        if (!(clazz.isAnnotationPresent(LmmComponent.class))) {
             return;
         }
         Field[] fields = clazz.getDeclaredFields();

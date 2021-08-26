@@ -6,7 +6,7 @@ import java.lang.annotation.*;
  * @author lmmarise.j@gmail.com
  * @since 2021/8/22 9:41 下午
  */
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface LmmAutowired {

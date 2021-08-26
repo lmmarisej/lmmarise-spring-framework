@@ -1,6 +1,6 @@
 package org.lmmarise.springframework.web.servlet;
 
-import org.lmmarise.springframework.beans.factory.annotation.LmmRequestParam;
+import org.lmmarise.springframework.web.bind.annotation.LmmRequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

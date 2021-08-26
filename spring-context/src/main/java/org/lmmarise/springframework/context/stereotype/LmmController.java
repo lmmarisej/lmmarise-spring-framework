@@ -1,4 +1,4 @@
-package org.lmmarise.springframework.beans.factory.annotation;
+package org.lmmarise.springframework.context.stereotype;
 
 import java.lang.annotation.*;
 

@@ -1,16 +1,15 @@
-package org.lmmarise.springframework.beans.factory.annotation;
+package org.lmmarise.springframework.context.stereotype;
 
 import java.lang.annotation.*;
 
 /**
- * 业务逻辑，注入接口
- *
  * @author lmmarise.j@gmail.com
- * @since 2021/8/22 9:37 下午
+ * @since 2021/8/26 9:21 下午
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@LmmComponent
 public @interface LmmService {
     String value() default "";
 }

@@ -1,4 +1,4 @@
-package org.lmmarise.springframework.beans.factory.annotation;
+package org.lmmarise.springframework.web.bind.annotation;
 
 import java.lang.annotation.*;
 

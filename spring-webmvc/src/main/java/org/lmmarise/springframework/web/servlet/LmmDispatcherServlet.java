@@ -1,9 +1,9 @@
 package org.lmmarise.springframework.web.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.lmmarise.springframework.beans.factory.annotation.LmmController;
-import org.lmmarise.springframework.beans.factory.annotation.LmmRequestMapping;
-import org.lmmarise.springframework.beans.factory.annotation.LmmResponseBody;
+import org.lmmarise.springframework.context.stereotype.LmmController;
+import org.lmmarise.springframework.web.bind.annotation.LmmRequestMapping;
+import org.lmmarise.springframework.web.bind.annotation.LmmResponseBody;
 import org.lmmarise.springframework.context.LmmApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

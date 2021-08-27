@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.RowMapper;
 import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;

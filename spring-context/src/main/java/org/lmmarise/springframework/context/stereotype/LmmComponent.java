@@ -17,4 +17,7 @@ import java.lang.annotation.*;
 @Documented
 @Indexed
 public @interface LmmComponent {
+
+    String value() default "";
+
 }

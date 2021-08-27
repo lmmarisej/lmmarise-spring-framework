@@ -105,9 +105,9 @@ public class LmmAdvisedSupport {
      * 根据AOP配置，将需要回调的方法封装成一个拦截器链并返回提供给外部获取
      */
     public List<Object> getInterceptorsAndDynamicInterceptionAdvice(Method method, Class<?> targetClass) throws Exception {
-        List<Object> cached = methodCache.get(method);  // 如果是JDK代理，传入的则是接口，必然获取不到
+        List<Object> cached = methodCache.get(method);  // methodCache put时key是实例方法；如果是JDK代理，传入的则是接口，必然获取不到
         if (cached == null) {
-            Method m = targetClass.getMethod(method.getName(), method.getParameterTypes()); // 获取方法签名，从实例对象身上获取方法
+            Method m = targetClass.getMethod(method.getName(), method.getParameterTypes()); // 获取方法签名，从实例对象身上获取实例方法作为key查
             cached = methodCache.get(m);
             this.methodCache.put(m, cached);
         }

@@ -5,6 +5,7 @@ import org.lmmarise.framework.framework.LmmAdvisedSupport;
 import org.lmmarise.framework.framework.LmmAopProxy;
 import org.lmmarise.framework.framework.LmmCgLibProxy;
 import org.lmmarise.framework.framework.LmmJdkDynamicAopProxy;
+import org.lmmarise.springframework.annotation.LmmAliasFor;
 import org.lmmarise.springframework.beans.LmmBeanWrapper;
 import org.lmmarise.springframework.beans.factory.LmmBeanFactory;
 import org.lmmarise.springframework.beans.factory.LmmBeanPostProcessor;
@@ -14,12 +15,13 @@ import org.lmmarise.springframework.beans.factory.config.LmmBeanDefinition;
 import org.lmmarise.springframework.beans.factory.support.LmmBeanDefinitionReader;
 import org.lmmarise.springframework.context.stereotype.LmmComponent;
 import org.lmmarise.springframework.context.stereotype.LmmController;
-import org.lmmarise.springframework.context.stereotype.LmmService;
 import org.lmmarise.springframework.context.support.LmmDefaultListableBeanFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -184,11 +186,31 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
     }
 
     /**
+     * 判断 class 是否属于 LmmComponent
+     * <p>
+     * 是则需要被作为 Spring 的 Bean 来处理
+     */
+    private boolean isComponentClass(Class<?> clazz) {
+        if (clazz.isAnnotationPresent(LmmComponent.class)) {
+            return true;
+        }
+        for (Annotation annotation : clazz.getAnnotations()) {
+            for (Method method : annotation.annotationType().getDeclaredMethods()) {
+                if (method.getName().equals("value") && method.isAnnotationPresent(LmmAliasFor.class)
+                        && method.getAnnotation(LmmAliasFor.class).annotation() == LmmComponent.class) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * 对实例的 LmmAutowired 字段进行注入
      */
     private void populationBean(String beanName, Object instance) {
         Class<?> clazz = instance.getClass();
-        if (!(clazz.isAnnotationPresent(LmmComponent.class))) {
+        if (!isComponentClass(clazz)) {
             return;
         }
         Field[] fields = clazz.getDeclaredFields();

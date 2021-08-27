@@ -1,5 +1,7 @@
 package org.lmmarise.springframework.context.stereotype;
 
+import org.lmmarise.springframework.annotation.LmmAliasFor;
+
 import java.lang.annotation.*;
 
 /**
@@ -11,6 +13,10 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@LmmComponent
 public @interface LmmController {
+
+    @LmmAliasFor(annotation = LmmComponent.class)
     String value() default "";
+
 }

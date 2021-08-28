@@ -5,7 +5,7 @@ import org.lmmarise.framework.framework.LmmAdvisedSupport;
 import org.lmmarise.framework.framework.LmmAopProxy;
 import org.lmmarise.framework.framework.LmmCgLibProxy;
 import org.lmmarise.framework.framework.LmmJdkDynamicAopProxy;
-import org.lmmarise.springframework.annotation.LmmAliasFor;
+import org.lmmarise.springframework.core.annotation.LmmAliasFor;
 import org.lmmarise.springframework.beans.LmmBeanWrapper;
 import org.lmmarise.springframework.beans.factory.LmmBeanFactory;
 import org.lmmarise.springframework.beans.factory.LmmBeanPostProcessor;
@@ -14,7 +14,6 @@ import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
 import org.lmmarise.springframework.beans.factory.config.LmmBeanDefinition;
 import org.lmmarise.springframework.beans.factory.support.LmmBeanDefinitionReader;
 import org.lmmarise.springframework.context.stereotype.LmmComponent;
-import org.lmmarise.springframework.context.stereotype.LmmController;
 import org.lmmarise.springframework.context.support.LmmDefaultListableBeanFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,20 +185,18 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
     }
 
     /**
-     * 判断 class 是否属于 LmmComponent
+     * 判断 class 是否属于 LmmComponent，只要"继承"了 LmmComponent 注解的都是
      * <p>
      * 是则需要被作为 Spring 的 Bean 来处理
      */
-    private boolean isComponentClass(Class<?> clazz) {
+    public static boolean isComponentClass(Class<?> clazz) {
         if (clazz.isAnnotationPresent(LmmComponent.class)) {
             return true;
         }
         for (Annotation annotation : clazz.getAnnotations()) {
-            for (Method method : annotation.annotationType().getDeclaredMethods()) {
-                if (method.getName().equals("value") && method.isAnnotationPresent(LmmAliasFor.class)
-                        && method.getAnnotation(LmmAliasFor.class).annotation() == LmmComponent.class) {
-                    return true;
-                }
+            if (annotation.annotationType().isAnnotationPresent(LmmComponent.class)
+                    || isComponentClass(annotation.annotationType())) {
+                return true;
             }
         }
         return false;

@@ -1,4 +1,4 @@
-package org.lmmarise.springframework.annotation;
+package org.lmmarise.springframework.core.annotation;
 
 import java.lang.annotation.*;
 

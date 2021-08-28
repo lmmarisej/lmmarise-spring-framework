@@ -3,6 +3,8 @@ package org.lmmarise.framework.framework;
 /**
  * 使用CGLib生成代理类
  *
+ * todo CGLib的动态代理尚未实现！！！
+ *
  * @author lmmarise.j@gmail.com
  * @since 2021/8/24 2:55 下午
  */

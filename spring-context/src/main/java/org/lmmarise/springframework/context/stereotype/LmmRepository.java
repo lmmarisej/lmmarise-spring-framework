@@ -1,6 +1,6 @@
 package org.lmmarise.springframework.context.stereotype;
 
-import org.lmmarise.springframework.annotation.LmmAliasFor;
+import org.lmmarise.springframework.core.annotation.LmmAliasFor;
 
 import java.lang.annotation.*;
 

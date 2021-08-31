@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -130,7 +131,7 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
     }
 
     /**
-     * 实例化 Bean，并放入容器
+     * 实例化 Bean 同时处理 AOP，并放入容器
      */
     private Object instantiateBean(LmmBeanDefinition beanDefinition) {
         Object instance = null;
@@ -194,6 +195,10 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
             return true;
         }
         for (Annotation annotation : clazz.getAnnotations()) {
+            // 排除 Java 标准注解，如 @Target，@Documented 等，它们因相互依赖，将导致递归不断
+            if (Target.class.getPackage().equals(annotation.annotationType().getPackage())) {
+                continue;
+            }
             if (annotation.annotationType().isAnnotationPresent(LmmComponent.class)
                     || isComponentClass(annotation.annotationType())) {
                 return true;

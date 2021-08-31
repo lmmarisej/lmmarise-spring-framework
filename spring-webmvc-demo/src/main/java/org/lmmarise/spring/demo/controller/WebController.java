@@ -37,4 +37,11 @@ public class WebController {
         return queryService.queryAll();
     }
 
+    @LmmResponseBody
+    @LmmRequestMapping("/findById.json")
+    public Object findById(@LmmRequestParam("id") String id) throws Exception {
+        return queryService.findById(id);
+    }
+
+
 }

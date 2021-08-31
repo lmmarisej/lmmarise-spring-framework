@@ -17,4 +17,5 @@ public interface IQueryService {
 
     List<String> queryAll() throws Exception;
 
+    Object findById(String id);
 }

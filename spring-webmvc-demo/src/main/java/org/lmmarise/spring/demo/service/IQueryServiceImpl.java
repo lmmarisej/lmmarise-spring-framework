@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -40,6 +41,15 @@ public class IQueryServiceImpl implements IQueryService {
 //        list.add(query("5"));
 //        list.add(query("6"));
         return list;
+    }
+
+    @Override
+    public Object findById(String id) {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("id", id);
+        map.put("name", "cxk");
+        map.put("age", 12);
+        return map;
     }
 
 }

@@ -13,3 +13,6 @@ http://localhost:8080/web/queryAll.json <br/>
 
 http://localhost:8080/web/first.html?name=cxk   <br/>
 ![img_1.png](img_1.png)
+
+http://localhost:8080/web/findById.json?id=12   <br/>
+![img_3.png](img_3.png)

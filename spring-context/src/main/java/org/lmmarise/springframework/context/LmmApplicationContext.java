@@ -5,10 +5,10 @@ import org.lmmarise.framework.framework.LmmAdvisedSupport;
 import org.lmmarise.framework.framework.LmmAopProxy;
 import org.lmmarise.framework.framework.LmmCgLibProxy;
 import org.lmmarise.framework.framework.LmmJdkDynamicAopProxy;
-import org.lmmarise.springframework.core.annotation.LmmAliasFor;
 import org.lmmarise.springframework.beans.LmmBeanWrapper;
 import org.lmmarise.springframework.beans.factory.LmmBeanFactory;
 import org.lmmarise.springframework.beans.factory.LmmBeanPostProcessor;
+import org.lmmarise.springframework.beans.factory.LmmBeansException;
 import org.lmmarise.springframework.beans.factory.LmmInitializingBean;
 import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
 import org.lmmarise.springframework.beans.factory.config.LmmBeanDefinition;
@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -81,8 +80,13 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
     private void doAutowired() {
         for (Map.Entry<String, LmmBeanDefinition> beanDefinitionEntry : super.beanDefinitionMap.entrySet()) {
             String beanName = beanDefinitionEntry.getKey();
-            if (!beanDefinitionEntry.getValue().isLazyInit()) {
-                getBean(beanName);  // 优先初始化并装载非 Lazy 的 Bean，避免循环引用
+            if (!beanDefinitionEntry.getValue().isLazyInit()) {         // 优先初始化并装载非 Lazy 的 Bean，避免循环引用
+                Object bean = getBean(beanName);                        // 获取并填充Bean
+                if (bean == null) continue;
+                if (bean instanceof LmmApplicationContextAware) {
+                    ((LmmApplicationContextAware) bean).setApplicationContext(this);    // Aware接口
+                }
+                initializeBean(beanName, bean);                         // 初始化Bean
             }
         }
     }
@@ -105,29 +109,44 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
     @Override
     public Object getBean(String beanName) {
         LmmBeanDefinition beanDefinition = super.beanDefinitionMap.get(beanName);
-        // 通知事件
-        LmmBeanPostProcessor beanPostProcessor = new LmmBeanPostProcessor() {
-        };
         Object instance = instantiateBean(beanDefinition);
         if (instance == null) {
             return null;
         }
         // bean 实例化之前的回调
         try {
-            beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
-            if (instance instanceof LmmInitializingBean) {
-                ((LmmInitializingBean) instance).afterPropertiesSet();
-            }
             LmmBeanWrapper beanWrapper = new LmmBeanWrapper(instance);
             this.factoryBeanInstanceCache.put(beanName, beanWrapper);
             // 实例初始化之后调用
-            beanPostProcessor.postProcessAfterInitialization(instance, beanName);
             populationBean(beanName, instance);
             return this.factoryBeanInstanceCache.get(beanName).getWrappedInstance();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 初始化Bean
+     */
+    private void initializeBean(String beanName, Object bean) {
+        // 通知事件
+        LmmBeanPostProcessor beanPostProcessor = new LmmBeanPostProcessor() {
+        };
+        try {
+            // 初始化前置
+            beanPostProcessor.postProcessAfterInitialization(bean, beanName);
+            // @PostConstruct
+            // InitializingBean
+            if (bean instanceof LmmInitializingBean) {
+                ((LmmInitializingBean) bean).afterPropertiesSet();
+            }
+            // init-method
+            // 初始化后置
+            beanPostProcessor.postProcessBeforeInitialization(bean, beanName);
+        } catch (Exception e) {
+            log.error("初始化Bean[{}]失败", bean.getClass().getName());
+        }
     }
 
     /**

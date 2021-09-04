@@ -29,7 +29,7 @@ public class LmmBeanDefinitionReader {
     private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
     public LmmBeanDefinitionReader(String... locations) {
-        try(InputStream is = this.getClass().getClassLoader().getResourceAsStream(locations[0].replace("classpath:", ""))) {
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(locations[0].replace("classpath:", ""))) {
             this.config.load(is);
         } catch (IOException e) {
             e.printStackTrace();
@@ -45,7 +45,7 @@ public class LmmBeanDefinitionReader {
         // 以“/”开头表示的是src根目录下开始查找。如果不是以“/”开头的则表示从当前类的包中开始查找。
         URL url = this.getClass().getClassLoader().getResource("/" + scanPackage.replaceAll("\\.", "/"));
         if (url == null) {
-            throw new RuntimeException("Package '" + scanPackage +  "' not found.");
+            throw new RuntimeException("Package '" + scanPackage + "' not found.");
         }
         File classPath = new File(url.getFile());
         for (File file : Objects.requireNonNull(classPath.listFiles())) {
@@ -73,25 +73,47 @@ public class LmmBeanDefinitionReader {
         return this.beanClassLoader;
     }
 
-
+    /**
+     * 将Classpath下的所有扫描到的BeanClasses，封装为BeanDefinition。
+     * <p>
+     * 1，BeanDefinition以首字母小写的类名为key，全限类名为value。
+     * 2，Bean实现了接口的情况下，同时将Bean的所有接口的全限类名作为BeanDefinition的别名，所有的接口的全限类名都是他的key。
+     */
     public List<LmmBeanDefinition> loadBeanDefinitions() {
         ArrayList<LmmBeanDefinition> result = new ArrayList<>();
         try {
             for (String className : this.registryBeanClasses) {
                 Class<?> beanClass = Class.forName(className);
-                if (beanClass.isInterface()) {
+                if (beanClass.isInterface() || beanClass.isEnum()) {
                     continue;
                 }
-                result.add(doCreateBeanDefinition(StringUtils.toLowerCaseFirstCase(beanClass.getSimpleName()), beanClass.getName()));
-                Class<?>[] interfaces = beanClass.getInterfaces();
-                for (Class<?> i : interfaces) {
-                    result.add(doCreateBeanDefinition(i.getName(), i.getName()));
+                // todo Bean注入容器自定义BeanName
+                result.add(doCreateBeanDefinition(beanClass.getName(), beanClass.getName()));
+                for (String beanName : getBeanOtherNames(beanClass)) {
+                    result.add(doCreateBeanDefinition(beanName, beanClass.getName()));
                 }
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         return result;
+    }
+
+    private ArrayList<String> getBeanOtherNames(Class<?> beanClass) {
+        ArrayList<String> names = new ArrayList<>();
+        Class<?> superclass = beanClass.getSuperclass();
+        if (superclass != null && !superclass.getName().startsWith("java.")) {
+            names.add(superclass.getName());
+            names.addAll(getBeanOtherNames(superclass));
+        }
+        for (Class<?> anInterface :beanClass.getInterfaces()){
+            if (anInterface.getName().startsWith("java.")) continue;
+            names.add(anInterface.getName());
+            if (anInterface.getSuperclass() != null) {
+                getBeanOtherNames(anInterface.getSuperclass());
+            }
+        }
+        return names;
     }
 
     private LmmBeanDefinition doCreateBeanDefinition(String factoryBeanName, String beanClassName) {

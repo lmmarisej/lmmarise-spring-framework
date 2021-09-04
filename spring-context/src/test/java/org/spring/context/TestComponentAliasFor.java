@@ -1,7 +1,7 @@
 package org.spring.context;
 
 import org.junit.Test;
-import org.lmmarise.springframework.annotation.LmmAliasFor;
+import org.lmmarise.springframework.core.annotation.LmmAliasFor;
 import org.lmmarise.springframework.context.stereotype.LmmComponent;
 import org.lmmarise.springframework.context.stereotype.LmmController;
 import org.lmmarise.springframework.util.Assert;

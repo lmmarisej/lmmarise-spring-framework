@@ -1,5 +1,9 @@
 package org.lmmarise.spring.demo.service;
 
+import org.lmmarise.spring.demo.listener.LmmCommonApplicationEventMulticaster;
+import org.lmmarise.spring.demo.listener.SystemEventType;
+import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
+import org.lmmarise.springframework.context.event.LmmApplicationEvent;
 import org.lmmarise.springframework.context.stereotype.LmmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +22,9 @@ import java.util.List;
 public class IQueryServiceImpl implements IQueryService {
 
     private static final Logger log = LoggerFactory.getLogger(IQueryServiceImpl.class);
+
+    @LmmAutowired
+    private LmmCommonApplicationEventMulticaster lmmcommonApplicationEventMulticaster;      /// null ??
 
     @Override
     public String query(String name) throws Exception {
@@ -45,6 +52,11 @@ public class IQueryServiceImpl implements IQueryService {
 
     @Override
     public Object findById(String id) {
+        // 创建事件
+        LmmApplicationEvent applicationEvent = new LmmApplicationEvent("findById被触发", SystemEventType.START);
+        // 触发所有同类型事件
+        lmmcommonApplicationEventMulticaster.multicastEvent(applicationEvent);
+
         HashMap<String, Object> map = new HashMap<>();
         map.put("id", id);
         map.put("name", "cxk");

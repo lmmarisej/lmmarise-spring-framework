@@ -8,7 +8,7 @@ import org.lmmarise.aopalliance.intercept.LmmMethodInvocation;
 import java.lang.reflect.Method;
 
 /**
- * 前置通知具体实现
+ * 后置通知的实现
  *
  * @author lmmarise.j@gmail.com
  * @since 2021/8/24 4:03 下午

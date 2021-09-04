@@ -10,9 +10,6 @@ import java.util.List;
  */
 public interface IQueryService {
 
-    /**
-     * 查询
-     */
     String query(String name) throws Exception;
 
     List<String> queryAll() throws Exception;

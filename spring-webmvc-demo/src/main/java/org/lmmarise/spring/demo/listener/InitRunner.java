@@ -2,6 +2,7 @@ package org.lmmarise.spring.demo.listener;
 
 import org.lmmarise.springframework.beans.factory.LmmInitializingBean;
 import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
+import org.lmmarise.springframework.context.event.LmmAbstractApplicationEventMulticaster;
 import org.lmmarise.springframework.context.stereotype.LmmComponent;
 
 /**
@@ -13,7 +14,7 @@ import org.lmmarise.springframework.context.stereotype.LmmComponent;
 @LmmComponent
 public class InitRunner implements LmmInitializingBean {
     @LmmAutowired
-    private LmmCommonApplicationEventMulticaster applicationEventMulticaster;
+    private LmmAbstractApplicationEventMulticaster applicationEventMulticaster;
     @LmmAutowired
     private IncidentStatisticsListener applicationEventListener;
 

@@ -8,7 +8,7 @@ import org.lmmarise.aopalliance.intercept.LmmMethodInvocation;
 import java.lang.reflect.Method;
 
 /**
- * 在 invoke 中控制前置通知的调用顺序
+ * 前置通知具体实现
  *
  * @author lmmarise.j@gmail.com
  * @since 2021/8/24 3:51 下午

@@ -81,12 +81,7 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
         for (Map.Entry<String, LmmBeanDefinition> beanDefinitionEntry : super.beanDefinitionMap.entrySet()) {
             String beanName = beanDefinitionEntry.getKey();
             if (!beanDefinitionEntry.getValue().isLazyInit()) {         // 优先初始化并装载非 Lazy 的 Bean，避免循环引用
-                Object bean = getBean(beanName);                        // 获取并填充Bean
-                if (bean == null) continue;
-                if (bean instanceof LmmApplicationContextAware) {
-                    ((LmmApplicationContextAware) bean).setApplicationContext(this);    // Aware接口
-                }
-                initializeBean(beanName, bean);                         // 初始化Bean
+                getBean(beanName);                        // 获取并填充Bean
             }
         }
     }
@@ -108,17 +103,30 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
      */
     @Override
     public Object getBean(String beanName) {
+        // 避免Bean多次初始化 todo 加入Bean的单例多例模式
+        if (this.factoryBeanInstanceCache.get(beanName) != null) {
+            return this.factoryBeanInstanceCache.get(beanName).getWrappedInstance();
+        }
         LmmBeanDefinition beanDefinition = super.beanDefinitionMap.get(beanName);
+        if (beanDefinition == null) {
+            return null;
+        }
         Object instance = instantiateBean(beanDefinition);
         if (instance == null) {
             return null;
         }
         // bean 实例化之前的回调
         try {
-            LmmBeanWrapper beanWrapper = new LmmBeanWrapper(instance);
-            this.factoryBeanInstanceCache.put(beanName, beanWrapper);
             // 实例初始化之后调用
             populationBean(beanName, instance);
+            // Ware回调
+            if (instance instanceof LmmApplicationContextAware) {
+                ((LmmApplicationContextAware) instance).setApplicationContext(this);    // Aware接口
+            }
+            // Bean初始化方法回调
+            initializeBean(beanName, instance);                         // 初始化Bean
+            // 缓存创建完成的Bean
+            this.factoryBeanInstanceCache.put(beanName, new LmmBeanWrapper(instance));
             return this.factoryBeanInstanceCache.get(beanName).getWrappedInstance();
         } catch (Exception e) {
             e.printStackTrace();
@@ -150,7 +158,7 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
     }
 
     /**
-     * 实例化 Bean 同时处理 AOP，并放入容器
+     * 实例化 Bean 之前需要提前处理 AOP
      */
     private Object instantiateBean(LmmBeanDefinition beanDefinition) {
         Object instance = null;
@@ -162,6 +170,7 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
             } else {
                 Class<?> clazz = Class.forName(className);
                 instance = clazz.newInstance();
+                populationBean(className, instance);
 
                 // 处理 AOP
                 LmmAdvisedSupport config = instantiationAopConfig(beanDefinition);
@@ -245,9 +254,14 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
                 autowiredBeanName = field.getType().getName();  // 不指定 BeanName 则根据类型注入
             }
             field.setAccessible(true);
+            // 尝试获取实例化完成的Bean
             Object bean = this.factoryBeanObjectCache.get(autowiredBeanName);
             if (bean == null) {
-                throw new RuntimeException("Could not autowired bean, beanName[" + autowiredBeanName + "] does not found in ApplicationContext.");
+                // 尝试实例化未实例化的Bean
+                bean = getBean(field.getType().getName());
+                if (bean == null) {
+                    throw new RuntimeException("Could not autowired bean, beanName[" + autowiredBeanName + "] does not found in ApplicationContext.");
+                }
             }
             try {
                 field.set(instance, bean);

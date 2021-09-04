@@ -257,8 +257,8 @@ public class LmmApplicationContext extends LmmDefaultListableBeanFactory impleme
             // 尝试获取实例化完成的Bean
             Object bean = this.factoryBeanObjectCache.get(autowiredBeanName);
             if (bean == null) {
-                // 尝试实例化未实例化的Bean
-                bean = getBean(field.getType().getName());
+                // 根据接口名找到实现类，走Bean的生命周期，创建Bean实例
+                bean = getBean(this.beanDefinitionMap.get(field.getType().getName()).getBeanClassName());
                 if (bean == null) {
                     throw new RuntimeException("Could not autowired bean, beanName[" + autowiredBeanName + "] does not found in ApplicationContext.");
                 }

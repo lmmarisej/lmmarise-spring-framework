@@ -1,20 +1,19 @@
 package org.lmmarise.spring.demo.service;
 
-import org.lmmarise.spring.demo.listener.LmmCommonApplicationEventMulticaster;
 import org.lmmarise.spring.demo.listener.SystemEventType;
 import org.lmmarise.springframework.beans.factory.annotation.LmmAutowired;
+import org.lmmarise.springframework.context.event.LmmAbstractApplicationEventMulticaster;
 import org.lmmarise.springframework.context.event.LmmApplicationEvent;
 import org.lmmarise.springframework.context.stereotype.LmmService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
+ * application.properties 中，配置了AOP代理所有的service。
+ *
  * @author lmmarise.j@gmail.com
  * @since 2021/8/23 10:16 下午
  */
@@ -24,11 +23,14 @@ public class IQueryServiceImpl implements IQueryService {
     private static final Logger log = LoggerFactory.getLogger(IQueryServiceImpl.class);
 
     @LmmAutowired
-    private LmmCommonApplicationEventMulticaster lmmcommonApplicationEventMulticaster;      /// null ??
+    private LmmAbstractApplicationEventMulticaster lmmcommonApplicationEventMulticaster;
 
+    /**
+     * 加入AOP前置通知、后置通知、异常通知测试。
+     */
     @Override
     public String query(String name) throws Exception {
-        if (1 == 1) {
+        if (new Random().nextInt(2) == 1) {
             throw new Exception("测试异常通知！");
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

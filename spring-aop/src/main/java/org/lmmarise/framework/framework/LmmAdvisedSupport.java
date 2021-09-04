@@ -68,11 +68,11 @@ public class LmmAdvisedSupport {
                 Matcher matcher = pattern.matcher(methodString);
                 // 满足切面规则的类，添加到AOP配置中
                 if (matcher.matches()) {
-                    // 一个方法可以有多个通知，按照通知执行顺序有序放入
+                    // 一个方法可以有多个通知，按照通知执行顺序有序织入
                     LinkedList<Object> advices = new LinkedList<>();
                     // 前置通知
                     if (!(null == config.getAspectBefore() || "".equals(config.getAspectBefore().trim()))) {
-                        advices.add(new LmmMethodBeforeAdvice(aspectMethods.get(config.getAspectBefore()), aspectClass.newInstance()));
+                        advices.add(new LmmMethodBeforeAdvice(aspectMethods.get(config.getAspectBefore()), aspectClass.newInstance()));     // 一个通知对应一个Aspect实例
                     }
                     // 后置通知
                     if (!(null == config.getAspectAfter() || "".equals(config.getAspectAfter().trim()))) {
@@ -107,7 +107,7 @@ public class LmmAdvisedSupport {
     public List<Object> getInterceptorsAndDynamicInterceptionAdvice(Method method, Class<?> targetClass) throws Exception {
         List<Object> cached = methodCache.get(method);  // methodCache put时key是实例方法；如果是JDK代理，传入的则是接口，必然获取不到
         if (cached == null) {
-            Method m = targetClass.getMethod(method.getName(), method.getParameterTypes()); // 获取方法签名，从实例对象身上获取实例方法作为key查
+            Method m = targetClass.getMethod(method.getName(), method.getParameterTypes()); // 不直接根据方法签名获取方法，而是利用条件去查询方法
             cached = methodCache.get(m);
             this.methodCache.put(m, cached);
         }

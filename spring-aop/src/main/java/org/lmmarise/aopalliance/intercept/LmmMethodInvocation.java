@@ -73,14 +73,14 @@ public class LmmMethodInvocation implements LmmJoinpoint {
      */
     public Object proceed() throws Throwable {
         if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
-            return this.method.invoke(this.target, this.arguments);
+            return this.method.invoke(this.target, this.arguments);     // 执行真正的方法
         }
         Object interceptorOrInterceptionAdvice = this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
         if (interceptorOrInterceptionAdvice instanceof LmmMethodInterceptor) {
             LmmMethodInterceptor mi = (LmmMethodInterceptor) interceptorOrInterceptionAdvice;
-            return mi.invoke(this);
+            return mi.invoke(this);     // 执行通知
         } else {
-            return proceed();
+            return proceed();               // 在拦截链上移动到下一个拦截器
         }
     }
 }
